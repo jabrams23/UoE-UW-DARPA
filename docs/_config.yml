@@ -99,7 +99,7 @@ url: "https://jabrams23.github.io" # the base hostname & protocol for your site,
 domain: "jabrams23.github.io"
 twitter_username: 
 github_username:  jabrams23
-logo: "/assets/logos/logo.svg" # Site logo, also used in jekyll-seo-tag
+logo: "/assets/logos/logo.png" # Site logo, also used in jekyll-seo-tag
 # disqus: "alembic-1" # Blog post comments, uncomment the option and set the site ID from your Disqus account
 # date_format: "%-d %B %Y" # Blog post date formatting using placeholder formatting
 # google_analytics: ""
