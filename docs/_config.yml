@@ -1,1 +1,64 @@
+
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+#
+# If you need help with YAML syntax, here are some quick references for you: 
+# https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
+# https://learnxinyminutes.com/docs/yaml/
+#
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
+
+title: Climate Prediction using Hybrid Models
+email: j.abrams@exeter.ac.uk
+description: >- # this means to ignore newlines until "baseurl:"
+  This program is based on combining two components. The first is a conventional knowledge-based model of the evolution of the climate. The second is a machine learning component employing a spatial grid of many, relatively small, reservoir computers trained in parallel on observation-based state evolution data. This approach has been formulated by us through previous DARPA-funded research. We call our scheme Combined Hybrid Parallel Prediction (CHyPP, pronounced \"chip\").
+
+  In past work, we have successfully implemented CHyPP for weather forecasting. For this implementation, the knowledge-based component of the hybrid was a low-resolution, but realistic, fully 3-dimensional atmospheric global circulation model known as SPEEDY. SPEEDY was formulated for climate studies, and incorporates terrestrial geography, including representations of the Earth\'s continents, oceans, ice covered regions, and mountain ranges. This preliminary weather forecasting work has demonstrated the great potential of the CHyPP approach. In particular, it uses the data-driven machine learning component to effectively compensate for the inability of conventional, purely knowledge-based geophysical models to appropriately capture sub-grid scale dynamics, which are known to have crucial fundamental effects on the dynamics at the resolved scale. Such results lead us to anticipate that CHyPP may also facilitate large improvements in climate and tipping-point prediction relative to what is attainable using conventional, purely knowledge-based modeling.
+baseurl: "/UoE-UW-DARPA/" # the subpath of your site, e.g. /blog
+url: "https://jabrams23.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+domain: "jabrams23.github.io"
+twitter_username: 
+github_username:  jabrams23
+
+# Build settings
 theme: jekyll-theme-minimal
+plugins:
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-seo-tag
+  - jekyll-remote-theme
+
+cover: images/cover.jpg
+
+#google_analytics: 
+
+# Exclude from processing.
+# The following items will not be processed, by default.
+# Any item listed under the `exclude:` key here will be automatically added to
+# the internal "default list".
+#
+# Excluded items can be processed by explicitly listing the directories or
+# their entries' file path in the `include:` list.
+#
+# exclude:
+#   - .sass-cache/
+#   - .jekyll-cache/
+#   - gemfiles/
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules/
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/
