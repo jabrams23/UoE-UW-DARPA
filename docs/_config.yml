@@ -135,6 +135,8 @@ navigation_header:
 #  url: /data/
 - title: Our Team
   url: /people/
+- title: Search
+  url: /search/
 
 navigation_footer:
 - title: Created by David Darnes
