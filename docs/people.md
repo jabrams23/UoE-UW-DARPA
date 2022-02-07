@@ -8,7 +8,7 @@ permalink: /people/
 ## University of Exeter
 <img style="float: right" src="../images/umd_logo.png" height="200">
 
-[**Prof. Timothy M. Lenton**](https://geography.exeter.ac.uk/staff/?web_id=Timothy_Lenton), PI, Director of Global Systems Institute <a href="https://scholar.google.com/citations?user=DiCOJ64AAAAJ" title="Tim Lenton Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="10px"></a> <a href="https://en.wikipedia.org/wiki/Tim_Lenton" title="Tim Leton Wikipedia"><img src="https://en.wikipedia.org/wiki/Wikipedia_logo#/media/File:Black_W_for_promotion.png" width="10px"></a>
+[**Prof. Timothy M. Lenton**](https://geography.exeter.ac.uk/staff/?web_id=Timothy_Lenton), PI, Director of Global Systems Institute <a href="https://scholar.google.com/citations?user=DiCOJ64AAAAJ" title="Tim Lenton Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="10px"></a> <a href="https://en.wikipedia.org/wiki/Tim_Lenton" title="Tim Leton Wikipedia"><img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Wikipedia-W-visual-balanced.svg" width="10px"></a>
 
 
 [**Dr. Jesse F. Abrams**](https://emps.exeter.ac.uk/mathematics/staff/ja610), Global Systems Institute and Institute for Data Science and Artificial Intelligence <a href="https://scholar.google.com/citations?user=xfdhu8MAAAAJ" title="Jesse Abrams Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="10px"></a> 
