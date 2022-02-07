@@ -6,13 +6,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-      .ai-google-scholar-square:before {
-        content: "\e9f9";
-      }
-    </style>
-
-
     {% if page.indexing == false %}
       <meta name="robots" content="noindex">
     {% endif %}
@@ -50,6 +43,12 @@
     {% include site-fonts.html %}
 
     {% include site-before-start.html %}
+
+    <style>
+      .ai-google-scholar-square:before {
+        content: "\e9f9";
+      }
+    </style>
   </head>
 
   <body class="layout-{{ page.layout }}{% if page.title %}  {{ page.title | slugify }}{% endif %}">
