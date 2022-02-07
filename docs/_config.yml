@@ -131,8 +131,8 @@ navigation_header:
   url: /publications/
 - title: Repositories
   url: /repos/
-- title: Data
-  url: /data/
+#- title: Data
+#  url: /data/
 - title: Our Team
   url: /people/
 
