@@ -32,8 +32,8 @@ github_username:  jabrams23
 
 # Build settings
 #remote_theme: zivong/jekyll-theme-hydure
-#remote_theme: benbalter/retlab
-remote_theme: daviddarnes/alembic
+remote_theme: benbalter/retlab
+#remote_theme: daviddarnes/alembic
 plugins:
   - jekyll-feed
   - jekyll-paginate
