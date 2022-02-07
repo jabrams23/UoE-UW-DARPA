@@ -14,9 +14,6 @@ exclude:
 - README.md
 - CODE_OF_CONDUCT.md
 - CONTRIBUTING.md
-- screenshot.png
-- LICENSE
-- CNAME
 - Gemfile
 - Gemfile.lock
 - alembic-jekyll-theme.gemspec
@@ -123,16 +120,18 @@ favicons: # Favicons are also used in the manifest file. Syntax is 'size: path'
 navigation_header:
 - title: Home
   url: /
-- title: Elements
-  url: /elements/
-- title: Blog
-  url: /blog/
-- title: Categories
-  url: /categories/
-- title: Search
-  url: /search/
-- title: Fork Alembic
-  url: https://github.com/daviddarnes/alembic
+- title: Project Summary
+  url: /summary/
+- title: Progress Reports
+  url: /reports/
+- title: Publications
+  url: /publications/
+- title: Repositories
+  url: /repos/
+- title: Data
+  url: /data/
+- title: Our Team
+  url: /people/
 
 navigation_footer:
 - title: Created by David Darnes
