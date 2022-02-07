@@ -1,14 +1,15 @@
 ---
-title: Milestone 1 report: Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
+title: Milestone 1 report - Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
 categories:
 - General
 - External sources
 feature_image: "https://picsum.photos/2560/600?image=872"
 ---
 
+Milestone 1 report: Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
+
 <!-- more -->
 
-Milestone 1 report
 Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
 The aim of the University of Exeter / University of Waterloo project is to continue development of a deep learning approach for identifying early warning signals (EWS) of tipping points in the climate system. This project will extend on work that was recently published in PNAS, which used a CNN-LSTM (convolutional neural network—long short-term memory network) to provide EWS. The results showed how deep learning algorithms can provide EWS of tipping points in real-world systems.
 
