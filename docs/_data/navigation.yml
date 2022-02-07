@@ -1,0 +1,14 @@
+- title: Home
+  url: /
+- title: Project Summary
+  url: /summary/
+- title: Progress Reports
+  url: /reports/
+- title: Publications
+  url: /publications/
+- title: Repositories
+  url: /repos/
+- title: Data
+  url: /data/
+- title: Our Team
+  url: /people/
