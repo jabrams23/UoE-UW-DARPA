@@ -5,7 +5,7 @@ title: Our Team
 permalink: /people/
 ---
 
-## University of Exeter <img style="float: right; width: 100px !important;" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Uni_Exeter.svg">
+## University of Exeter <img style="float: right; width: 200px !important;" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Uni_Exeter.svg">
 
 [**Prof. Timothy M. Lenton**](https://geography.exeter.ac.uk/staff/?web_id=Timothy_Lenton), PI, Director of Global Systems Institute <a href="https://scholar.google.com/citations?user=DiCOJ64AAAAJ" title="Tim Lenton Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="20px"></a> <a href="https://en.wikipedia.org/wiki/Tim_Lenton" title="Tim Leton Wikipedia"><img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Wikipedia-W-visual-balanced.svg" width="20px"></a>
 
@@ -17,4 +17,4 @@ permalink: /people/
 [**Joshua Buxton**](http://geography.exeter.ac.uk/staff/index.php?web_id=Joshua_Buxton), Global Systems Institute 
 
 
-## University of Waterloo
+## University of Waterloo <img style="float: right; width: 200px !important;" src="https://uwaterloo.ca/brand/sites/ca.brand/files/styles/body-500px-wide/public/uploads/images/universityofwaterloo_logo_horiz_rgb_1.jpg">
