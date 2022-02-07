@@ -15,14 +15,3 @@ permalink: /people/
 [**Dr. Chris A. Boulton**](https://www.math.umd.edu/~bhunt/), Department of Mathematics <a href="https://scholar.google.com/citations?user=ten7UlMAAAAJ&hl=en" title="Brian Hunt Google Scholar"> <i style="color: #4788ee;" class="ai ai-google-scholar-square ai-lg"></i></a>
 
 [**Josh Buxton**](https://ireap.umd.edu/graduate-students/patel-dhruvit), Graduate Student, Department of Physics <a href="https://scholar.google.com/citations?user=mx7LoLsAAAAJ&hl=en" title="Dhruvit Patel Google Scholar"> <i style="color: #4788ee;" class="ai ai-google-scholar-square ai-lg"></i></a> <a href="https://www.linkedin.com/in/dhruvitpatel135/" title="Dhruvit Patel LinkedIn"> <i style="color: #0077b5;" class="fab fa-linkedin fa-lg"></i></a>
-
-## Texas A&M University
-<img style="float: right" src="../images/tamu_logo.png" height="200">
-[**Prof. Istvan Szunyogh**](https://atmo.tamu.edu/people/profiles/faculty/szunyoghistvan.html), Department of Atmospheric Sciences <a href="https://scholar.google.com/citations?user=L4JW_JUAAAAJ&hl=en" title="Istvan Szunyogh Google Scholar"> <i style="color: #4788ee;" class="ai ai-google-scholar-square ai-lg"></i></a>
-
-[**Troy Arcomano**](https://atmo.tamu.edu/people/profiles/students/arcomanotroy.html), Graduate Student, Department of Atmospheric Sciences <a href="https://scholar.google.com/citations?user=SBeD6doAAAAJ&hl=en" title="Troy Arcomano Google Scholar"> <i style="color: #4788ee;" class="ai ai-google-scholar-square ai-lg"></i></a> <a href="https://github.com/Arcomano1234" title="Troy Arcomano Github"> <i style="color: #632580;" class="fab fa-github-square fa-lg"></i></a>
-
-[**Mitchell Tsokatos**](https://atmo.tamu.edu/people/profiles/students/tsokatosmitchell.html), Graduate Student, Department of Atmospheric Science 
-
-## Potomac Research, LLC
-**Dr. Andrew Pomerance** <a href="https://scholar.google.com/scholar?hl=en&as_sdt=0%2C9&q=andrew+pomerance&btnG=" title="Andrew Pomerance Google Scholar"> <i style="color: #4788ee;" class="ai ai-google-scholar-square ai-lg"></i></a> <a href="https://www.linkedin.com/in/andrew-pomerance-00338b90/" title="Andrew Pomerance LinkedIn"> <i style="color: #0077b5;" class="fab fa-linkedin fa-lg"></i></a>
