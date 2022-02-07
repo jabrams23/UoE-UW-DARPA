@@ -32,7 +32,7 @@ twitter_username:
 github_username:  jabrams23
 
 # Build settings
-theme: jekyll-theme-minimal
+remote_theme: zivong/jekyll-theme-hydure
 plugins:
   - jekyll-feed
   - jekyll-paginate
