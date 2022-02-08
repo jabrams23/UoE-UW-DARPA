@@ -1,11 +1,11 @@
 ---
-layout: post
-title: Milestone 1 report - Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
+title: Milestone 1 report
+categories:
+- General
+- External sources
 category: reports
 feature_image: "https://picsum.photos/2560/600?image=872"
 ---
-
-{% include base.html %}
 
 Milestone 1 report: Identify constituents of the hybrid models along with planned datasets and the problems and target effects to be investigated.
 
