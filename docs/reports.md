@@ -1,8 +1,8 @@
 ---
 # cover: cover.jpg
 title: Progress Reports
-permalink: /reports_old/
+permalink: /reports/
 category: reports
-layout: page-posts
+layout: blog
 ---
 
