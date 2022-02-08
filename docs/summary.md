@@ -1,6 +1,6 @@
 ---
 #cover: cover.jpg
-title: Program Summary
+title: Project Summary
 permalink: /summary/
 ---
 ## Introduction
