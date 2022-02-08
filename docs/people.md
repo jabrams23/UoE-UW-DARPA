@@ -18,3 +18,8 @@ permalink: /people/
 
 
 ## University of Waterloo <img style="float: right; width: 200px !important;" src="https://uwaterloo.ca/brand/sites/ca.brand/files/styles/body-500px-wide/public/uploads/images/universityofwaterloo_logo_horiz_rgb_1.jpg">
+
+[**Prof. Chris Bauch**](https://www.math.uwaterloo.ca/~cbauch/), Department of Applied Mathematics <a href="https://scholar.google.com/citations?user=DmwSNy0AAAAJ" title="Chris Bauch Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="20px"></a> 
+
+[**Dr. Daniel Dylewsky**](https://www.math.uwaterloo.ca/~cbauch/lab-members.php), Department of Applied Mathematics <a href="https://scholar.google.com/citations?user=8HadyakAAAAJ&hl=en" title="Daniel Dylewsky Google Scholar"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Google_Scholar_logo.svg" width="20px"></a> 
+
