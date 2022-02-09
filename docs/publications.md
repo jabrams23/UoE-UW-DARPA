@@ -21,3 +21,15 @@ Boulton, C. A., Allison, L. C., & Lenton, T. M. (2014). [Early warning signals o
 Boulton, C. A., & Lenton, T. M. (2015). [Slowing down of North Pacific climate variability and its implications for abrupt ecosystem change](https://doi.org/10.1073/pnas.1501781112). Proceedings of the National Academy of Sciences, 112(37), 11496-11501.
 
 Boulton, C. A., & Lenton, T. M. (2019). [A new method for detecting abrupt shifts in time series](https://doi.org/10.12688/f1000research.19310.1). F1000Research, 8(746), 746.
+
+Bury, T. M., Bauch, C. T., & Anand, M. (2020). [Detecting and distinguishing tipping points using spectral early warning signals](https://doi.org/10.1098/rsif.2020.0482). Journal of the Royal Society Interface, 17(170), 20200482.
+
+Phillips, B., Anand, M., & Bauch, C. T. (2020). [Spatial early warning signals of social and epidemiological tipping points in a coupled behaviour-disease network](https://doi.org/10.1038/s41598-020-63849-0). Scientific reports, 10(1), 1-12.
+
+Henderson, K. A., Bauch, C. T., & Anand, M. (2016). [Alternative stable states and the sustainability of forests, grasslands, and agriculture](https://doi.org/10.1073/pnas.1604987113). Proceedings of the National Academy of Sciences, 113(51), 14552-14559.
+
+Bauch, C. T., Sigdel, R., Pharaon, J., & Anand, M. (2016). [Early warning signals of regime shifts in coupled human–environment systems](https://doi.org/10.1073/pnas.1604978113). Proceedings of the National Academy of Sciences, 113(51), 14560-14567.
+
+
+
+
