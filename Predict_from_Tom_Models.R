@@ -35,6 +35,6 @@ predict_probs <- function(x, wl=length(x), len=1500) {
 			}
 		}
 	}
-	return(predict_probs)
+	return(probs)
 	# the values returned are the probability of the time series approaching a [1] fold, [2] hopf, [3] transcritical or [4] no bifurcation
 } 
