@@ -11,7 +11,7 @@ normalise <- function(x) {
 	# a function to noramlise time series to predict from
 	norm_x <- rep(NA, length(x))
 	for (i in 1:length(x)) {
-		norm_x[i] <- x[i]/mean(abs(x))
+		norm_x[i] <- (x[i]-mean(x))/sd(x)
 	}
 	return(norm_x)
 }
