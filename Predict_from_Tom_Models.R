@@ -22,8 +22,8 @@ predict_probs <- function(x, wl=length(x), len=1500) {
 	# can specifiy a window length (wl) to calculate the probabilites on which increases one time series at a time
 	# by default will just use the whole time series
 	# len refers to which set of models are used
-	
-	probs <- array(NA, dim=c(length(x)-wl+1,4,20))
+	l <- length(x)
+	probs <- array(NA, dim=c(l-wl+1,4,20))
 	count <- 0
 	for (i in 1:10) {
 		for (j in 1:2) {
