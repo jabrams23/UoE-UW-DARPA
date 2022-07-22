@@ -457,4 +457,6 @@ pre code {
 }
 
 
-tr, td {border: black 1px !important}
+table, tr, td {border: 1px solid black !important}
+
+.typeset table thead th {border: 1px solid black !important}
