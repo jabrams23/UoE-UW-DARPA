@@ -17,8 +17,7 @@ to the system)
 Coupling coefficients J between neighboring lattice sites are also randomized 
 (normally distributed about some mean value)
 
-If process_ews == True, compute secondary EWS statistics and write results to
-'Processed' directory
+If process_data == True, process and write results to 'Processed' directory
 
 """
 
@@ -33,14 +32,17 @@ import time
 from ising_model_process_data import process_ising_data
 
 
-def generate_constants(order_param):
+def generate_constants(order_param,L):
+    # L = lattice side length
     try:
         rng = np.random.default_rng()
     except AttributeError:
         rng = np.random.RandomState()
-    null = rng.choice([0,1])
-    # null = 1
-    # null = 0
+        
+    if order_param not in ['temp_local','h_local']:
+        null = rng.choice([0,1])
+        # null = 1
+        # null = 0
     # J = 8*rng.normal()
     J_mean = 2**(5*rng.uniform())
     J_std = 0.3*rng.uniform()*J_mean # 0 - 30% of mean
@@ -87,6 +89,7 @@ def generate_constants(order_param):
             Tb1 = Tc * (0.5 - 0.4*rng.uniform())
             Tb2 = Tc * (1.5 + 0.4*rng.uniform())
             Tbounds = np.sort(np.array([Tb1,Tb2]))[::-1] # descending order
+            Tbounds = rng.permutation(Tbounds)
             
         # Tbounds = rng.permutation(Tbounds)
         hbounds = np.array([0,0])
@@ -124,13 +127,42 @@ def generate_constants(order_param):
         # Tbounds = rng.permutation(Tbounds)
         Tbounds = -np.ones(2)
         while np.any(Tbounds <= 0):
-            Tbounds = Tc * (0.9 - 0.6*rng.uniform()) * np.ones(2)
+            Tbounds = Tc * (0.9 - 0.8*rng.uniform()) * np.ones(2)
+            
+    elif order_param == 'temp_local':
+        Tb_null_1 = Tc * (0.2 + 0.2*rng.uniform())
+        Tb_null_2 = Tc * (0.4 + 0.2*rng.uniform())
+        
+        bounds_null = Tc + offset_dir*np.array([Tb_null_1,Tb_null_2])
+        bounds_null = rng.permutation(bounds_null)
+        
+        Tb_trans_1 = bounds_null[0]
+        Tb_trans_2 = Tc + -offset_dir * Tc * (0.1 + 0.4*rng.uniform())
+        bounds_trans = np.array([Tb_trans_1,Tb_trans_2])
+        
+        
+        try:
+            spike_loc = np.array([rng.integers(L),rng.integers(L)])
+        except AttributeError:
+            # rng.integers function is missing from old versions of numpy
+            spike_loc = np.array([np.random.randint(L),np.random.randint(L)])
+        spike_width = np.random.uniform(0.2,0.3)*L
+        
     
-    run_params = {'null':null, 'J_mean':J_mean, 'J_std':J_std, 'Tc':Tc, 'Hc':Hc, 
-                  'Tbounds':Tbounds, 'hbounds':hbounds,
+
+    run_params = {'J_mean':J_mean, 'J_std':J_std, 'Tc':Tc, 'Hc':Hc, 
                   'spatial_coarse_graining':spatial_coarse_graining,
                   'temporal_coarse_graining':temporal_coarse_graining,
                   'epoch_len':epoch_len, 'bias':bias}
+    if order_param in ['temp_local','h_local']:
+        run_params['bounds_null'] = bounds_null
+        run_params['bounds_trans'] = bounds_trans
+        run_params['spike_loc'] = spike_loc
+        run_params['spike_width'] = spike_width
+    else:
+        run_params['null'] = null
+        run_params['Tbounds'] = Tbounds
+        run_params['hbounds'] = hbounds
     return run_params
 
 def generate_mask(size,mask_type=None,count=2):
@@ -158,14 +190,31 @@ def generate_mask(size,mask_type=None,count=2):
             emask = ev > 1
             mask = np.multiply(mask,emask)
         return mask
+    
+def bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width):
+    vals = np.tile(np.linspace(bounds_null[0],bounds_null[1],sim_duration)[:,np.newaxis,np.newaxis],(1,sim_size,sim_size))
+            
+    lattice_coords = np.meshgrid(np.arange(sim_size),np.arange(sim_size))
+    lattice_center = int(sim_size/2)
+    spike_kernel = np.exp(-(np.power(lattice_coords[0]-lattice_center,2)+
+                            np.power(lattice_coords[1]-lattice_center,2))/spike_width**2)
+    
+    spike_kernel = np.roll(spike_kernel,shift=tuple(spike_loc-lattice_center),axis=(0,1))
+    
+    vals_local_peak = np.linspace(bounds_trans[0]-bounds_null[0],bounds_trans[1]-bounds_null[1],sim_duration)
+    vals_local = np.einsum('i,jk->ijk',vals_local_peak,spike_kernel)
+    
+    vals = vals + vals_local
+    return vals
 
 # order_param = 'h'
 # order_param = 'h_lin'
 # order_param = 'temp'
-order_param = 'temp_lin'
+# order_param = 'temp_lin'
+order_param = 'temp_local'
 
-# mask_type = None
-mask_type = 'ellipse'
+mask_type = None
+# mask_type = 'ellipse'
 
 if mask_type is None:
     out_dir = os.path.join('Ising_Output','var_'+order_param)
@@ -176,11 +225,13 @@ if not os.path.exists(out_dir):
     
 plot_stats = True
 
-process_ews = True
+process_data = True
+process_raw = True # output processed results before computing EWS
+process_ews = True # output computed EWS for processed results
     
-target_duration = 1200
-# target_duration = 20
-target_size = 128
+# target_duration = 1200
+target_duration = 600
+target_size = 256
 
 # epoch_len = int(np.round(target_size*np.sqrt(target_size))) # number of flips per epoch
 # epoch_len = target_size**2 # number of flips per epoch
@@ -200,25 +251,53 @@ spatial_corr_intervals = np.arange(1,4)
 # run_id_counter = np.max(existing_run_ids)
 for nr in range(n_runs):
 # for nr in [2]:
-    these_params = generate_constants(order_param)
-    null = these_params['null']
+    these_params = generate_constants(order_param,target_size)
+    
     J_mean = these_params['J_mean']
     J_std = these_params['J_std']
     Tc = these_params['Tc']
     Hc = these_params['Hc']
-    Tbounds = these_params['Tbounds']
-    hbounds = these_params['hbounds']
     epoch_len = these_params['epoch_len']
     spatial_coarse_graining = these_params['spatial_coarse_graining']
     temporal_coarse_graining = these_params['temporal_coarse_graining']
     bias = these_params['bias']
+    
     sim_size = target_size*spatial_coarse_graining
     sim_duration = target_duration*temporal_coarse_graining
-    if null:
-        sim_duration = int(sim_duration/2)
     sim_burn_time = burn_time*temporal_coarse_graining
-    temps = np.linspace(Tbounds[0],Tbounds[1],sim_duration)
-    fields = np.linspace(hbounds[0],hbounds[1],sim_duration)
+    
+    if order_param in ['temp_local','h_local']:
+        bounds_null = these_params['bounds_null']
+        bounds_trans = these_params['bounds_trans']
+        spike_loc = these_params['spike_loc']
+        spike_width = these_params['spike_width']
+        
+        if order_param == 'temp_local':
+            
+            temps = bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width)
+            fields = np.zeros(sim_duration)
+            
+            if np.mean(temps[0,:,:]) > Tc:
+                temp_extremes = np.min(temps,axis=0)
+                null = temp_extremes > Tc
+            else:
+                temp_extremes = np.max(temps,axis=0)
+                null = temp_extremes < Tc
+                
+            crit_steps = np.argmin(np.abs(temps-Tc),axis=0)
+            crit_steps[null] = 0
+        
+    else:
+        null = these_params['null']
+        Tbounds = these_params['Tbounds']
+        hbounds = these_params['hbounds']
+        if null:
+            sim_duration = int(sim_duration/2)
+    
+        temps = np.linspace(Tbounds[0],Tbounds[1],sim_duration)
+        fields = np.linspace(hbounds[0],hbounds[1],sim_duration)
+    
+    
     
     J = J_mean*np.ones((sim_size,sim_size)) + J_std*(np.random.randn(sim_size,sim_size))
     
@@ -237,11 +316,21 @@ for nr in range(n_runs):
             initial_state = 'u'
     elif order_param == 'h' or order_param == 'h_lin':
         initial_state = 'r_h'
+    elif order_param == 'temp_local':
+        if np.mean(temps[0,:,:]) > Tc:
+            initial_state = 'r'
+        else:
+            initial_state = 'u'
+    else:
+        print('unknown order_param')
+        import pdb; pdb.set_trace()
     
 
 
+    
     run_output = ising_run(temps, fields, sim_size, J, run_id, sim_burn_time, epoch_len, bias,
                            initial_state=initial_state,mask=this_mask)
+    
     
     sys = run_output['sys']
     magnetization = run_output['magnetization']
@@ -317,25 +406,31 @@ for nr in range(n_runs):
         
         
         
-        if null == 0 and (order_param == 'temp' or order_param == 'temp_lin'):
-            crit_step = np.argmin(np.abs(temps-Tc))
-                
-            crit_time = time_full[sim_burn_time+crit_step]
-            for ax in axs[:,0]:
-                ax.axvline(time_full[sim_burn_time],ls=':',c='b')
-                ax.axvline(crit_time,ls=':',c='r')
+        if (order_param == 'temp' or order_param == 'temp_lin'):
+            if null == 0:
+                crit_step = np.argmin(np.abs(temps-Tc))
+                    
+                crit_time = time_full[sim_burn_time+crit_step]
+                for ax in axs[:,0]:
+                    ax.axvline(time_full[sim_burn_time],ls=':',c='b')
+                    ax.axvline(crit_time,ls=':',c='r')
             
-        fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
+        if order_param in ['temp_local','h_local']:
+            fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
+                     ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ')')
+        else:
+            fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
                      ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ', null = ' + str(null) + ')')
         plt.savefig(os.path.join(plot_dir,run_id+'.png'))
         plt.close()
+        
+    this_train_class = np.random.choice([0,1,2],p=[0.8,0.1,0.1]) # train, test, validate
+    subdir = ['train','test','validate'][this_train_class]
         
     out_dict = {'null':null,
                 'J':J,
                 'Tc':Tc,
                 'Hc':Hc,
-                'Tbounds':Tbounds,
-                'hbounds':hbounds,
                 'order_param':order_param,
                 'spatial_coarse_graining':spatial_coarse_graining,
                 'temporal_coarse_graining':temporal_coarse_graining,
@@ -343,24 +438,38 @@ for nr in range(n_runs):
                 'bias':bias,
                 'magnetization':magnetization,
                 'heat_capacity':heat_capacity,
-                'run_id':run_id}
+                'run_id':run_id,
+                'train_class':this_train_class}
     
-    data_file = os.path.join(out_dir,run_id+'.npz')
+    if order_param in ['temp_local','h_local']:
+        out_dict['bounds_null'] = bounds_null
+        out_dict['bounds_trans'] = bounds_trans
+        out_dict['spike_loc'] = spike_loc
+        out_dict['spike_width'] = spike_width
+        out_dict['crit_steps'] = crit_steps
+    else:
+        out_dict['Tbounds'] = Tbounds
+        out_dict['hbounds'] = hbounds
+
+    
+    if not os.path.exists(os.path.join(out_dir,subdir)):
+        os.makedirs(os.path.join(out_dir,subdir))
+        
+    data_file = os.path.join(out_dir,subdir,run_id+'.npz')
     np.savez_compressed(data_file,**out_dict,
                         allow_pickle=True, fix_imports=True)
     
     
-    if process_ews:
+    if process_data:
         smooth_param=[96,0]
         # outfile_nosmooth = os.path.join(out_dir,'Processed','Processed_' + run_id + '.pkl')
         outdir_smooth = os.path.join(out_dir,'Processed','Gaussian_{}_{}'.format(smooth_param[0],smooth_param[1]))
-        outfile_smooth = os.path.join(outdir_smooth,'Processed_' + run_id + '.pkl')
+        outfile_smooth = os.path.join(outdir_smooth,subdir,'Processed_' + run_id + '.pkl')
         
         if not os.path.exists(outdir_smooth):
             os.makedirs(outdir_smooth)
         
         # process_ising_data(data_file,outfile_nosmooth,order_param,smoothing=None)
-        process_ising_data(data_file,outfile_smooth,order_param,smoothing='gaussian',smooth_param=smooth_param)
-    
+        process_ising_data(data_file,order_param,smoothing='gaussian',smooth_param=smooth_param,output_raw=process_raw,output_ews=process_ews)
 
 
