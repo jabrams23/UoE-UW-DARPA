@@ -1,4 +1,4 @@
-Code to train a DL model to identify patterned vegetation. Current
+Code to train a DL model to identify patterned vegetation. Currently consisting of the following scripts:
 
 
 
