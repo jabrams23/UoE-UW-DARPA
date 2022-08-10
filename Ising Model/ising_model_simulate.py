@@ -8,12 +8,17 @@ class IsingLattice:
 
     def __init__(self, initial_state, size, J, h0, run_id, mask):
         self.size = size
-        self.h = h0
         
+        if h0 is np.ndarray:
+            self.h = h0
+        else:
+            self.h = h0*np.ones((size,size))
+            
         if J is np.ndarray:
             self.J = J
         else:
             self.J = J*np.ones((size,size))
+            
         self.run_id = run_id
         if mask is None:
             self.mask = np.ones((size,size))
@@ -48,7 +53,7 @@ class IsingLattice:
         elif initial_state == 'u':
             system = np.ones(self.sqr_size)
         elif initial_state == 'r_h':
-            est_mag = np.tanh(2*self.h) #rough estimate of magnetization from mean field approx
+            est_mag = np.tanh(2*np.mean(self.h)) #rough estimate of magnetization from mean field approx
             prob = (est_mag + 1)/2
             system = np.random.choice([-1, 1], size=self.sqr_size, p=[1-prob,prob])
         else:
@@ -105,7 +110,7 @@ class IsingLattice:
         return -2*self.J[N,M]*self.system[N, M]*(
             self.system[self._bc(N - 1), M] + self.system[self._bc(N + 1), M]
             + self.system[N, self._bc(M - 1)] + self.system[N, self._bc(M + 1)]
-        ) - self.h*self.system[N, M]
+        ) - np.multiply(self.h,self.system[N, M])
 
     @property
     def internal_energy(self):
@@ -116,7 +121,7 @@ class IsingLattice:
         a = self.system
         
         
-        E_mat = -np.multiply(self.J,np.multiply(a,(np.roll(a,-1,0)+np.roll(a,1,0)+np.roll(a,-1,1)+np.roll(a,1,1)))) - self.h*a
+        E_mat = -np.multiply(self.J,np.multiply(a,(np.roll(a,-1,0)+np.roll(a,1,0)+np.roll(a,-1,1)+np.roll(a,1,1)))) - np.multiply(self.h,a)
         
         E = np.sum(E_mat)
         E_2 = np.sum(np.power(E_mat,2))
@@ -134,7 +139,7 @@ class IsingLattice:
 
     def heat_capacity(self, temp):
         U, U_2 = self.internal_energy
-        return (U_2 - U**2)/temp**2
+        return np.mean((U_2 - U**2)/np.power(temp,2)) # if temp is matrix, this returns mean heat capacity over the lattice
 
     @property
     def magnetization(self):
@@ -148,7 +153,7 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
     """
     
     
-    epochs = len(temps)
+    epochs = temps.shape[0]
     try:
         rng = np.random.default_rng()
     except AttributeError:
@@ -169,22 +174,40 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
                 coord_list.append((N,M))
 
     for step in range(epochs+burn_time):
+        
         if step < burn_time:
-            this_temp_interval = temps[0]*np.ones(2)
-            this_field_interval = fields[0]*np.ones(2)
+            epoch = 0
+            if temps.ndim == 1:
+                this_temp_interval = temps[0]*np.ones(2)
+            else:
+                this_temp_interval = [temps[0,:,:],temps[0,:,:]]
+            if fields.ndim == 1:
+                this_field_interval = fields[0]*np.ones(2)
+            else:
+                this_field_interval = [fields[0,:,:],fields[0,:,:]]
             if step % 10 == 0:
                 print('Burn epoch ' + str(step) + '/' + str(burn_time))
         else:
             epoch = step - burn_time
-            dtemp = temps[1]-temps[0]
-            this_temp_interval = temps[epoch] + np.array([0,dtemp])
-            dh = fields[1]-fields[0]
-            this_field_interval = fields[epoch] + np.array([0,dh])
+            if temps.ndim == 1:
+                dtemp = temps[1]-temps[0]
+                this_temp_interval = temps[epoch] + np.array([0,dtemp])
+            else:
+                this_temp_interval = [temps[epoch,:,:],temps[epoch,:,:]] # don't bother with subdivisions here
+            
+            if fields.ndim == 1:
+                dh = fields[1]-fields[0]
+                this_field_interval = fields[epoch] + np.array([0,dh])
+            else:
+                this_field_interval = [fields[epoch,:,:],fields[epoch,:,:]]
             if epoch % 10 == 0:
                 print('Run epoch ' + str(epoch) + '/' + str(epochs))
             
-        subtemps = np.linspace(this_temp_interval[0],this_temp_interval[1],epoch_len)
-        subfields = np.linspace(this_field_interval[0],this_field_interval[1],epoch_len)
+        if temps.ndim == 1:
+            subtemps = np.linspace(this_temp_interval[0],this_temp_interval[1],epoch_len)
+            
+        if fields.ndim == 1:
+            subfields = np.linspace(this_field_interval[0],this_field_interval[1],epoch_len)
         
         step_avg = np.zeros((lattice.size,lattice.size))
         for substep in range(epoch_len):
@@ -192,8 +215,15 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
             N, M = coord_list[np.random.randint(len(coord_list))]
             
             
-            this_temp = subtemps[substep]
-            lattice.h = subfields[substep]
+            if temps.ndim == 1:
+                this_temp = subtemps[substep]
+            else:
+                this_temp = temps[epoch,:,:]
+            
+            if fields.ndim == 1:
+                lattice.h = subfields[substep]
+            else:
+                lattice.h = fields[epoch,:,:]
 
             # Calculate energy of a flipped spin
             E = -1*lattice.energy(N, M)
@@ -202,7 +232,7 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
             # "Roll the dice" to see if the spin is flipped
             if E <= 0.:
                 lattice.system[N, M] *= -1
-            elif np.exp(-E/this_temp) > rng.uniform() + bias:
+            elif np.exp(-E/this_temp[N,M]) > rng.uniform() + bias:
                 lattice.system[N, M] *= -1
             
             # E = lattice.energy(N,M)
@@ -237,7 +267,12 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
 
 def ising_run(temps, fields, size, J, run_id, burn_time, epoch_len, bias, initial_state='r', mask=None):
     
-    lattice = IsingLattice(initial_state=initial_state, size=size, J=J, run_id=run_id, h0 = fields[0], mask=mask)
+    if fields.ndim == 1:
+        h0 = fields[0]
+    else:
+        h0 = fields[0,:,:]
+    
+    lattice = IsingLattice(initial_state=initial_state, size=size, J=J, run_id=run_id, h0 = h0, mask=mask)
     out_vars = run(lattice, temps, fields, burn_time, epoch_len, bias)
 
     return out_vars
