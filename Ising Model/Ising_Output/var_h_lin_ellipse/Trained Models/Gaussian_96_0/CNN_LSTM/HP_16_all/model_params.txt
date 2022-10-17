@@ -1,0 +1,1 @@
+{'CNN_layers': 2, 'LSTM_layers': 1, 'pool_size_param': 2, 'learning_rate_param': 0.001, 'dropout_percent': 0.1, 'filters_param': 20, 'mem_cells': 20, 'mem_cells2': 5, 'kernel_size_param': 8, 'epoch_param': 20, 'initializer_param': 'lecun_normal', 'rhs_crop': 100, 'add_noise': 0}
