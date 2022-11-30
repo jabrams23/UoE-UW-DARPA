@@ -191,7 +191,7 @@ def generate_mask(size,mask_type=None,count=2):
             mask = np.multiply(mask,emask)
         return mask
     
-def bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width):
+def bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width,sim_duration,sim_size):
     vals = np.tile(np.linspace(bounds_null[0],bounds_null[1],sim_duration)[:,np.newaxis,np.newaxis],(1,sim_size,sim_size))
             
     lattice_coords = np.meshgrid(np.arange(sim_size),np.arange(sim_size))
@@ -207,269 +207,287 @@ def bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width):
     vals = vals + vals_local
     return vals
 
-# order_param = 'h'
-# order_param = 'h_lin'
-# order_param = 'temp'
-# order_param = 'temp_lin'
-order_param = 'temp_local'
 
-mask_type = None
-# mask_type = 'ellipse'
-
-if mask_type is None:
-    out_dir = os.path.join('Ising_Output','var_'+order_param)
-else:
-    out_dir = os.path.join('Ising_Output','var_'+order_param+'_'+mask_type)
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
-    
-plot_stats = True
-
-process_data = True
-process_raw = True # output processed results before computing EWS
-process_ews = True # output computed EWS for processed results
-    
-# target_duration = 1200
-target_duration = 600
-target_size = 256
-
-# epoch_len = int(np.round(target_size*np.sqrt(target_size))) # number of flips per epoch
-# epoch_len = target_size**2 # number of flips per epoch
-
-n_runs = 1000
-# n_runs = 1
-burn_time = 50
-
-print('Running ' + str(n_runs) + ' runs of order parameter ' + order_param)
-
-spatial_corr_intervals = np.arange(1,4)
-
-# file_list = np.array(glob.glob(os.path.join(out_dir,'*.npz')))
-# if len(file_list) > 0:
-#     existing_run_ids = [int(os.path.split(fname)[-1][:-4]) for fname in file_list]
-
-# run_id_counter = np.max(existing_run_ids)
-for nr in range(n_runs):
-# for nr in [2]:
-    these_params = generate_constants(order_param,target_size)
-    
-    J_mean = these_params['J_mean']
-    J_std = these_params['J_std']
-    Tc = these_params['Tc']
-    Hc = these_params['Hc']
-    epoch_len = these_params['epoch_len']
-    spatial_coarse_graining = these_params['spatial_coarse_graining']
-    temporal_coarse_graining = these_params['temporal_coarse_graining']
-    bias = these_params['bias']
-    
-    sim_size = target_size*spatial_coarse_graining
-    sim_duration = target_duration*temporal_coarse_graining
-    sim_burn_time = burn_time*temporal_coarse_graining
-    
-    if order_param in ['temp_local','h_local']:
-        bounds_null = these_params['bounds_null']
-        bounds_trans = these_params['bounds_trans']
-        spike_loc = these_params['spike_loc']
-        spike_width = these_params['spike_width']
+def main(params):
+    order_param = params['order_param']
+    mask_type = params['mask_type']
+    plot_stats = params['plot_stats']
+    process_data = params['process_data']
+    process_raw = params['process_raw']
+    process_ews = params['process_ews']
+    target_duration = params['target_duration']
+    target_size = params['target_size']
+    n_runs = params['n_runs']
+    burn_time = params['burn_time']
         
-        if order_param == 'temp_local':
-            
-            temps = bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width)
-            fields = np.zeros(sim_duration)
-            
-            if np.mean(temps[0,:,:]) > Tc:
-                temp_extremes = np.min(temps,axis=0)
-                null = temp_extremes > Tc
-            else:
-                temp_extremes = np.max(temps,axis=0)
-                null = temp_extremes < Tc
-                
-            crit_steps = np.argmin(np.abs(temps-Tc),axis=0)
-            crit_steps[null] = 0
-        
+    print('Running ' + str(n_runs) + ' runs of order parameter ' + order_param)
+    
+    if mask_type is None:
+        out_dir = os.path.join('Ising_Output','var_'+order_param)
     else:
-        null = these_params['null']
-        Tbounds = these_params['Tbounds']
-        hbounds = these_params['hbounds']
-        if null:
-            sim_duration = int(sim_duration/2)
-    
-        temps = np.linspace(Tbounds[0],Tbounds[1],sim_duration)
-        fields = np.linspace(hbounds[0],hbounds[1],sim_duration)
-    
-    
-    
-    J = J_mean*np.ones((sim_size,sim_size)) + J_std*(np.random.randn(sim_size,sim_size))
-    
-    this_mask = generate_mask(sim_size,mask_type=mask_type)
-    
-    # run_id_counter += 1
-    # run_id = '{0:04d}'.format(run_id_counter)
-    run_id = '{0:04d}'.format(int(np.round(1000*time.time())))
-    
-    
-    print('Executing run ' + str(nr) + ' (CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) + ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ', elen = ' + str(epoch_len) + ')')
-    if order_param == 'temp' or order_param == 'temp_lin':
-        if temps[0] > Tc:
-            initial_state = 'r'
-        else:
-            initial_state = 'u'
-    elif order_param == 'h' or order_param == 'h_lin':
-        initial_state = 'r_h'
-    elif order_param == 'temp_local':
-        if np.mean(temps[0,:,:]) > Tc:
-            initial_state = 'r'
-        else:
-            initial_state = 'u'
-    else:
-        print('unknown order_param')
-        import pdb; pdb.set_trace()
-    
-
-
-    
-    run_output = ising_run(temps, fields, sim_size, J, run_id, sim_burn_time, epoch_len, bias,
-                           initial_state=initial_state,mask=this_mask)
-    
-    
-    sys = run_output['sys']
-    magnetization = run_output['magnetization']
-    heat_capacity = run_output['heat_capacity']
-    
-    sys_burn = run_output['sys_burn']
-    magnetization_burn = run_output['magnetization_burn']
-    heat_capacity_burn = run_output['heat_capacity_burn']
-    
-    sys[sys==0] = np.nan
-    sys_burn[sys_burn==0] = np.nan
-    
-    # apply coarse-graining
-    sys_burn_cg = block_reduce(sys_burn,block_size=(temporal_coarse_graining,spatial_coarse_graining,spatial_coarse_graining),func=np.nanmean)
-    sys_cg = block_reduce(sys,block_size=(temporal_coarse_graining,spatial_coarse_graining,spatial_coarse_graining),func=np.nanmean)
-    if sys_cg.shape[1] != target_size or sys_cg.shape[0] != sim_duration:
-        print('Coarse graining size error')
-        print(str(sys.shape) + ' -> ' + str(sys_cg.shape))
+        out_dir = os.path.join('Ising_Output','var_'+order_param+'_'+mask_type)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
         
-    print('Computing spatial correlations')
-    all_spatial_corr = []
-    for ivl in spatial_corr_intervals:
-        # all_spatial_corr.append(np.hstack((morans(sys_burn_cg,ivl),morans(sys_cg,ivl))))
-        all_spatial_corr.append(morans(np.concatenate((sys_burn_cg,sys_cg),axis=0),ivl))
     
-    if plot_stats:
-        time_cg = np.arange((sim_duration/temporal_coarse_graining)+burn_time)
-        time_full = np.arange(0,(sim_duration/temporal_coarse_graining)+burn_time,1/temporal_coarse_graining)
+    spatial_corr_intervals = np.arange(1,4)
+    
+    # file_list = np.array(glob.glob(os.path.join(out_dir,'*.npz')))
+    # if len(file_list) > 0:
+    #     existing_run_ids = [int(os.path.split(fname)[-1][:-4]) for fname in file_list]
+    
+    # run_id_counter = np.max(existing_run_ids)
+    for nr in range(n_runs):
+    # for nr in [2]:
+        these_params = generate_constants(order_param,target_size)
         
-        plot_dir = os.path.join(out_dir,'Plots')
-        if not os.path.exists(plot_dir):
-            os.makedirs(plot_dir)
-            
+        J_mean = these_params['J_mean']
+        J_std = these_params['J_std']
+        Tc = these_params['Tc']
+        Hc = these_params['Hc']
+        epoch_len = these_params['epoch_len']
+        spatial_coarse_graining = these_params['spatial_coarse_graining']
+        temporal_coarse_graining = these_params['temporal_coarse_graining']
+        bias = these_params['bias']
         
-        fig, axs = plt.subplots(4,2,figsize=(12,9))
-        axs[0,0].plot(time_full,np.hstack((magnetization_burn,magnetization)))
-        axs[0,0].axvline(burn_time,ls=':',c='k')
-        axs[0,0].set_ylabel('Magnetization')
-        axs[0,0].set_ylim([-1.05,1.05])
+        sim_size = target_size*spatial_coarse_graining
+        sim_duration = target_duration*temporal_coarse_graining
+        sim_burn_time = burn_time*temporal_coarse_graining
         
-        axs[1,0].plot(time_full,np.hstack((heat_capacity_burn,heat_capacity)))
-        axs[1,0].set_ylabel('Heat Capacity')
-        axs[1,0].axvline(burn_time,ls=':',c='k')
-        
-        
-        if order_param == 'temp' or order_param == 'temp_lin':
-            axs[2,0].plot(time_full,np.hstack((temps[0]*np.ones(sim_burn_time),temps)))
-            axs[2,0].axhline(Tc,ls='--')
-            axs[2,0].set_ylabel('Temperature')
-        elif order_param == 'h' or order_param == 'h_lin':
-            axs[2,0].plot(time_full,np.hstack((fields[0]*np.ones(sim_burn_time),fields)))
-            axs[2,0].axhline(Hc,ls='--')
-            axs[2,0].axhline(-Hc,ls='--')
-            axs[2,0].axhline(0,ls=':')
-            axs[2,0].set_ylabel('External Field')
-        axs[2,0].axvline(burn_time,ls=':',c='k')
-        
-        for jiv, ivl in enumerate(spatial_corr_intervals):
-            axs[3,0].plot(time_cg,all_spatial_corr[jiv],label='r = {}'.format(ivl))
-        axs[3,0].axvline(burn_time,ls=':',c='k')
-        axs[3,0].set_ylabel('Spatial Correlation')
-        
-        axs[0,1].imshow(np.squeeze(sys_burn_cg[0,:,:]),vmin=-1,vmax=1)
-        axs[0,1].set_ylabel('Start of burn')
-        
-        axs[1,1].imshow(np.squeeze(sys_cg[0,:,:]),vmin=-1,vmax=1)
-        axs[1,1].set_ylabel('End of burn')
-        
-        
-        
-        axs[2,1].imshow(np.squeeze(sys_cg[-1,:,:]),vmin=-1,vmax=1)
-        axs[2,1].set_ylabel('Final')
-        
-        
-        
-        if (order_param == 'temp' or order_param == 'temp_lin'):
-            if null == 0:
-                crit_step = np.argmin(np.abs(temps-Tc))
-                    
-                crit_time = time_full[sim_burn_time+crit_step]
-                for ax in axs[:,0]:
-                    ax.axvline(time_full[sim_burn_time],ls=':',c='b')
-                    ax.axvline(crit_time,ls=':',c='r')
-            
         if order_param in ['temp_local','h_local']:
-            fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
-                     ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ')')
+            bounds_null = these_params['bounds_null']
+            bounds_trans = these_params['bounds_trans']
+            spike_loc = these_params['spike_loc']
+            spike_width = these_params['spike_width']
+            
+            if order_param == 'temp_local':
+                
+                temps = bounds_to_vals(bounds_null,bounds_trans,spike_loc,spike_width,sim_duration,sim_size)
+                fields = np.zeros(sim_duration)
+                
+                if np.mean(temps[0,:,:]) > Tc:
+                    temp_extremes = np.min(temps,axis=0)
+                    null = temp_extremes > Tc
+                else:
+                    temp_extremes = np.max(temps,axis=0)
+                    null = temp_extremes < Tc
+                    
+                crit_steps = np.argmin(np.abs(temps-Tc),axis=0)
+                crit_steps[null] = 0
+            
         else:
-            fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
-                     ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ', null = ' + str(null) + ')')
-        plt.savefig(os.path.join(plot_dir,run_id+'.png'))
-        plt.close()
+            null = these_params['null']
+            Tbounds = these_params['Tbounds']
+            hbounds = these_params['hbounds']
+            if not null:
+                sim_duration = 2*sim_duration
         
-    this_train_class = np.random.choice([0,1,2],p=[0.8,0.1,0.1]) # train, test, validate
-    subdir = ['train','test','validate'][this_train_class]
+            temps = np.linspace(Tbounds[0],Tbounds[1],sim_duration)
+            fields = np.linspace(hbounds[0],hbounds[1],sim_duration)
         
-    out_dict = {'null':null,
-                'J':J,
-                'Tc':Tc,
-                'Hc':Hc,
-                'order_param':order_param,
-                'spatial_coarse_graining':spatial_coarse_graining,
-                'temporal_coarse_graining':temporal_coarse_graining,
-                's':sys_cg,
-                'bias':bias,
-                'magnetization':magnetization,
-                'heat_capacity':heat_capacity,
-                'run_id':run_id,
-                'train_class':this_train_class}
+        
+        
+        J = J_mean*np.ones((sim_size,sim_size)) + J_std*(np.random.randn(sim_size,sim_size))
+        
+        this_mask = generate_mask(sim_size,mask_type=mask_type)
+        
+        # run_id_counter += 1
+        # run_id = '{0:04d}'.format(run_id_counter)
+        run_id = '{0:04d}'.format(int(np.round(1000*time.time())))
+        
+        
+        print('Executing run ' + str(nr) + ' (CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) + ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ', elen = ' + str(epoch_len) + ')')
+        if order_param == 'temp' or order_param == 'temp_lin':
+            if temps[0] > Tc:
+                initial_state = 'r'
+            else:
+                initial_state = 'u'
+        elif order_param == 'h' or order_param == 'h_lin':
+            initial_state = 'r_h'
+        elif order_param == 'temp_local':
+            if np.mean(temps[0,:,:]) > Tc:
+                initial_state = 'r'
+            else:
+                initial_state = 'u'
+        else:
+            print('unknown order_param')
+            import pdb; pdb.set_trace()
+        
     
-    if order_param in ['temp_local','h_local']:
-        out_dict['bounds_null'] = bounds_null
-        out_dict['bounds_trans'] = bounds_trans
-        out_dict['spike_loc'] = spike_loc
-        out_dict['spike_width'] = spike_width
-        out_dict['crit_steps'] = crit_steps
-    else:
-        out_dict['Tbounds'] = Tbounds
-        out_dict['hbounds'] = hbounds
+    
+        
+        run_output = ising_run(temps, fields, sim_size, J, run_id, sim_burn_time, epoch_len, bias,
+                               initial_state=initial_state,mask=this_mask)
+        
+        
+        sys = run_output['sys']
+        magnetization = run_output['magnetization']
+        heat_capacity = run_output['heat_capacity']
+        
+        sys_burn = run_output['sys_burn']
+        magnetization_burn = run_output['magnetization_burn']
+        heat_capacity_burn = run_output['heat_capacity_burn']
+        
+        sys[sys==0] = np.nan
+        sys_burn[sys_burn==0] = np.nan
+        
+        # apply coarse-graining
+        sys_burn_cg = block_reduce(sys_burn,block_size=(temporal_coarse_graining,spatial_coarse_graining,spatial_coarse_graining),func=np.nanmean)
+        sys_cg = block_reduce(sys,block_size=(temporal_coarse_graining,spatial_coarse_graining,spatial_coarse_graining),func=np.nanmean)
+        if sys_cg.shape[1] != target_size or sys_cg.shape[0] != sim_duration:
+            print('Coarse graining size error')
+            print(str(sys.shape) + ' -> ' + str(sys_cg.shape))
+            
+        print('Computing spatial correlations')
+        all_spatial_corr = []
+        for ivl in spatial_corr_intervals:
+            # all_spatial_corr.append(np.hstack((morans(sys_burn_cg,ivl),morans(sys_cg,ivl))))
+            all_spatial_corr.append(morans(np.concatenate((sys_burn_cg,sys_cg),axis=0),ivl))
+        
+        if plot_stats:
+            time_cg = np.arange((sim_duration/temporal_coarse_graining)+burn_time)
+            time_full = np.arange(0,(sim_duration/temporal_coarse_graining)+burn_time,1/temporal_coarse_graining)
+            
+            plot_dir = os.path.join(out_dir,'Plots')
+            if not os.path.exists(plot_dir):
+                os.makedirs(plot_dir)
+                
+            
+            fig, axs = plt.subplots(4,2,figsize=(12,9))
+            axs[0,0].plot(time_full,np.hstack((magnetization_burn,magnetization)))
+            axs[0,0].axvline(burn_time,ls=':',c='k')
+            axs[0,0].set_ylabel('Magnetization')
+            axs[0,0].set_ylim([-1.05,1.05])
+            
+            axs[1,0].plot(time_full,np.hstack((heat_capacity_burn,heat_capacity)))
+            axs[1,0].set_ylabel('Heat Capacity')
+            axs[1,0].axvline(burn_time,ls=':',c='k')
+            
+            
+            if order_param == 'temp' or order_param == 'temp_lin':
+                axs[2,0].plot(time_full,np.hstack((temps[0]*np.ones(sim_burn_time),temps)))
+                axs[2,0].axhline(Tc,ls='--')
+                axs[2,0].set_ylabel('Temperature')
+            elif order_param == 'h' or order_param == 'h_lin':
+                axs[2,0].plot(time_full,np.hstack((fields[0]*np.ones(sim_burn_time),fields)))
+                axs[2,0].axhline(Hc,ls='--')
+                axs[2,0].axhline(-Hc,ls='--')
+                axs[2,0].axhline(0,ls=':')
+                axs[2,0].set_ylabel('External Field')
+            axs[2,0].axvline(burn_time,ls=':',c='k')
+            
+            for jiv, ivl in enumerate(spatial_corr_intervals):
+                axs[3,0].plot(time_cg,all_spatial_corr[jiv],label='r = {}'.format(ivl))
+            axs[3,0].axvline(burn_time,ls=':',c='k')
+            axs[3,0].set_ylabel('Spatial Correlation')
+            
+            axs[0,1].imshow(np.squeeze(sys_burn_cg[0,:,:]),vmin=-1,vmax=1)
+            axs[0,1].set_ylabel('Start of burn')
+            
+            axs[1,1].imshow(np.squeeze(sys_cg[0,:,:]),vmin=-1,vmax=1)
+            axs[1,1].set_ylabel('End of burn')
+            
+            
+            
+            axs[2,1].imshow(np.squeeze(sys_cg[-1,:,:]),vmin=-1,vmax=1)
+            axs[2,1].set_ylabel('Final')
+            
+            
+            
+            if (order_param == 'temp' or order_param == 'temp_lin'):
+                if null == 0:
+                    crit_step = np.argmin(np.abs(temps-Tc))
+                        
+                    crit_time = time_full[sim_burn_time+crit_step]
+                    for ax in axs[:,0]:
+                        ax.axvline(time_full[sim_burn_time],ls=':',c='b')
+                        ax.axvline(crit_time,ls=':',c='r')
+                
+            if order_param in ['temp_local','h_local']:
+                fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
+                         ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ')')
+            else:
+                fig.suptitle(' Var. ' + order_param + ' Run ' + run_id + '(CG = ' + str((temporal_coarse_graining,spatial_coarse_graining)) +
+                         ', J_mean = {0:.2f}'.format(J_mean) + ', bias = {0:.2f}'.format(bias) + ', null = ' + str(null) + ')')
+            plt.savefig(os.path.join(plot_dir,run_id+'.png'))
+            plt.close()
+            
+        this_train_class = np.random.choice([0,1,2],p=[0.8,0.1,0.1]) # train, test, validate
+        subdir = ['train','test','validate'][this_train_class]
+            
+        out_dict = {'null':null,
+                    'J':J,
+                    'Tc':Tc,
+                    'Hc':Hc,
+                    'order_param':order_param,
+                    'spatial_coarse_graining':spatial_coarse_graining,
+                    'temporal_coarse_graining':temporal_coarse_graining,
+                    's':sys_cg,
+                    'bias':bias,
+                    'magnetization':magnetization,
+                    'heat_capacity':heat_capacity,
+                    'run_id':run_id,
+                    'train_class':this_train_class}
+        
+        if order_param in ['temp_local','h_local']:
+            out_dict['bounds_null'] = bounds_null
+            out_dict['bounds_trans'] = bounds_trans
+            out_dict['spike_loc'] = spike_loc
+            out_dict['spike_width'] = spike_width
+            out_dict['crit_steps'] = crit_steps
+        else:
+            out_dict['Tbounds'] = Tbounds
+            out_dict['hbounds'] = hbounds
+    
+        
+        if not os.path.exists(os.path.join(out_dir,subdir)):
+            os.makedirs(os.path.join(out_dir,subdir))
+            
+        data_file = os.path.join(out_dir,subdir,run_id+'.npz')
+        np.savez_compressed(data_file,**out_dict,
+                            allow_pickle=True, fix_imports=True)
+        
+        
+        if process_data:
+            smooth_param=[96,0]
+            # outfile_nosmooth = os.path.join(out_dir,'Processed','Processed_' + run_id + '.pkl')
+            outdir_smooth = os.path.join(out_dir,'Processed','Gaussian_{}_{}'.format(smooth_param[0],smooth_param[1]))
+            outfile_smooth = os.path.join(outdir_smooth,subdir,'Processed_' + run_id + '.pkl')
+            
+            if not os.path.exists(outdir_smooth):
+                os.makedirs(outdir_smooth)
+            
+            # process_ising_data(data_file,outfile_nosmooth,order_param,smoothing=None)
+            process_ising_data(data_file,order_param,smoothing='gaussian',smooth_param=smooth_param,output_raw=process_raw,output_ews=process_ews)
 
-    
-    if not os.path.exists(os.path.join(out_dir,subdir)):
-        os.makedirs(os.path.join(out_dir,subdir))
-        
-    data_file = os.path.join(out_dir,subdir,run_id+'.npz')
-    np.savez_compressed(data_file,**out_dict,
-                        allow_pickle=True, fix_imports=True)
-    
-    
-    if process_data:
-        smooth_param=[96,0]
-        # outfile_nosmooth = os.path.join(out_dir,'Processed','Processed_' + run_id + '.pkl')
-        outdir_smooth = os.path.join(out_dir,'Processed','Gaussian_{}_{}'.format(smooth_param[0],smooth_param[1]))
-        outfile_smooth = os.path.join(outdir_smooth,subdir,'Processed_' + run_id + '.pkl')
-        
-        if not os.path.exists(outdir_smooth):
-            os.makedirs(outdir_smooth)
-        
-        # process_ising_data(data_file,outfile_nosmooth,order_param,smoothing=None)
-        process_ising_data(data_file,order_param,smoothing='gaussian',smooth_param=smooth_param,output_raw=process_raw,output_ews=process_ews)
+
+if __name__ == "__main__":
+    params = {}
+
+    # params['order_param'] = 'h'
+    # params['order_param'] = 'h_lin'
+    # params['order_param'] = 'temp'
+    params['order_param'] = 'temp_lin'
+    # params['order_param'] = 'temp_local'
+
+    params['mask_type'] = None
+    # params['mask_type'] = 'ellipse'
 
 
+    params['plot_stats'] = True
+
+    params['process_data'] = False
+    params['process_raw'] = True # output processed results before computing EWS
+    params['process_ews'] = True # output computed EWS for processed results
+        
+    # target_duration = 1200
+    params['target_duration'] = 600
+    params['target_size'] = 256
+
+    # epoch_len = int(np.round(target_size*np.sqrt(target_size))) # number of flips per epoch
+    # epoch_len = target_size**2 # number of flips per epoch
+
+    # n_runs = 1000
+    params['n_runs'] = 1
+    params['burn_time'] = 50
+    main(params)

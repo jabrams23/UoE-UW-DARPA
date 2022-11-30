@@ -217,6 +217,7 @@ def run(lattice, temps, fields, burn_time, epoch_len, bias):
             
             if temps.ndim == 1:
                 this_temp = subtemps[substep]
+                this_temp = this_temp*np.ones((lattice.size,lattice.size))
             else:
                 this_temp = temps[epoch,:,:]
             
