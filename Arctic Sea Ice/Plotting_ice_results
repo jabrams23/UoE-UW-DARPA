@@ -1,1 +1,100 @@
+library(ggplot)
+
+#Need to download a predefined NOAA grid to plot the data on
+
+conc <- ncvar_get(nsidc,'cdr_seaice_conc_monthly')
+xgrid <- ncvar_get(nsidc,'xgrid')
+ygrid <- ncvar_get(nsidc,'ygrid')
+
+url <- 'https://polarwatch.noaa.gov/erddap/griddap/'
+
+grid_id <- 'nsidcCDRice_nh_grid'
+
+grid_urlcall <- paste0(url,grid_id,'.nc?longitude[(5812500.0):1:(-5337500.0)][(-3837500.0):1:(3737500.0)],latitude[(5812500.0):1:(-5337500.0)][(-3837500.0):1:(3737500.0)]')
+
+grid_nc <- download.file(grid_urlcall,destfile="grid.nc",mode='wb')
+
+# Read the grid file
+gridFid <- nc_open('grid.nc')
+ygrid <- ncvar_get(gridFid, varid="ygrid")
+xgrid <- ncvar_get(gridFid, varid="xgrid")
+longitude <- ncvar_get(gridFid, varid="longitude")
+latitude <- ncvar_get(gridFid, varid="latitude")
+nc_close(gridFid)
+
+dims <- dim(longitude)
+icemap.df <- data.frame(Longitude=array(longitude,dims[1]*dims[2]),
+                        Latitude=array(latitude,dims[1]*dims[2]))
+
+when_low <- long_when_low
+when_low[when_low < 60] <- NA
+when_low[when_low >= 60] <- 1
+
+diff_plot <- long_when_low - pre_long_when_low
+diff_plot[diff_plot == 24] <- 1
+
+study_area <- when_low*diff_plot
+
+
+study_area <- array(NA, c(dim(short_conc2)[1],dim(short_conc2)[2]))
+for (i in 1:dim(short_conc)[1]){
+  for (j in 1:dim(short_conc)[2]){
+    k <- long_when_low[i,j]
+    m <- pre_long_when_low[i,j]
+    if(is.na(t[1])) next
+    if(any((k-m) < 24)) {
+      study_area[i,j] <- 1  
+    }
+  }
+}
+
+#Add data to dataframe - example here of first month that ice dips below threshold
+
+icemap.df$when_low <- array(when_low,dims[1]*dims[2])
+
+
+#Plot with polar view
+
+data("wrld_simpl", package = "maptools")                                                                            
+wm <- ggplot2::map_data(wrld_simpl)
+
+x_lines <- seq(-120,180, by = 60) # for longitude indicator lines and labels
+x_labels <- seq(-120,120, by = 60)
+
+ggplot() +
+  
+  # Add data overlay 
+  geom_point(data=icemap.df, aes(x = Longitude, y = Latitude, color=when_low)) + 
+  scale_color_gradientn(colours=brewer.pal(n = 3, name = "OrRd"),na.value="white") + 
+  
+  geom_polygon(data = wm, aes(x = long, y = lat, group = group), 
+               fill = "grey", colour = "black", alpha = 0.8) +
+  
+  
+  # Set plot to polar coordinates
+  # setting the southward boundary to 65 deg N allows us to see the full extent of the returned data 
+  coord_map("ortho", orientation = c(90, 0, 0), xlim = c(-180, 180), ylim = c(65, 90)) +
+  scale_y_continuous(breaks = seq(65, 90, by = 5), labels = NULL) +
+  
+  # Removes Axes and labels
+  scale_x_continuous(breaks = NULL) +
+  xlab("") + 
+  ylab("") +
+  
+  # Adds labels
+  #longitudes
+  geom_text(aes(x = x_labels, y = 66, label = c("120°W", "60°W", "0°", "60°E", "120°E"))) +
+  #latitudes
+  geom_text(aes(x = 180, y = seq(65, 85, by = 5), hjust = -0.2, label = paste0(seq(65, 85, by = 5), "°N"))) +
+  
+  # Adds axes
+  geom_hline(aes(yintercept = 60), size = 1)  +
+  geom_segment(aes(y = 60, yend = 90, x = x_lines, xend = x_lines), linetype = "dashed") +
+  
+  guides(fill=guide_legend(title="New Legend Title")) +  
+  #Remove edge axes and ticks
+  theme(panel.background = element_blank(),
+        panel.grid.major = element_line(size = 0.25, linetype = 'dashed',
+                                        colour = "black"),
+        axis.ticks=element_blank())  
 
