@@ -81,7 +81,9 @@ for (i in 1:dim(conc2)[1]){
 #Now apply Bury DL model to each pixel
 #This requires downloading the Bury DL model from https://github.com/jabrams23/UoE-UW-DARPA/tree/main/Bury_Models
 
-normalise2 <- function(x) {
+#Create a function to normalise the time series prior to reading it into the model
+
+normalise <- function(x) {
   # a function to noramlise time series to predict from
   norm_x <- rep(NA, length(x))
   for (i in 1:length(x)) {
@@ -89,4 +91,60 @@ normalise2 <- function(x) {
   }
   return(norm_x)
 }
+
+
+#There are twenty models within the Bury model, this script will read one in to analyse each pixel with the model, before reading the next model in
+#The loops have the same preprocessing as the AR(1) loop with the addition of a normalisation stage
+#Each of the twenty models will give a probability of a fold, hopf, transcritical or no bifurcation
+
+model_location <- 'whichever_folder_you_save_the_model_in'
+predictions_ice <- array(NA, dim=c(dim(conc2)[1],dim(conc2)[2],4,20))
+count <- 0                                                                #Don't forget to reset the count each time!
+len <- 1500
+for (s in 1:10) {
+  for (t in 1:2) {
+    count <- count + 1
+    model <- load_model_tf(paste(model location,'best_model_',s,'_',t,'_len',len,'.pkl',sep=''))
+    try(predict(model, t(rnorm(1500))), silent=TRUE) #seems to be a bug where it has to go through a failed prediction first
+    for (i in 1:dim(conc2)[1]) {
+      for (j in 1:dim(conc2)[2]) {
+        print(c(i,j,count))
+        t <- short_conc[i,j,]
+        if(is.na(t[1])) next
+        t[t >1.5] <- 1
+        k <- long_when_low[i,j]
+        #m <- pre_long_when_low[i,j]
+        if(is.na(k)) next
+        if(any(k<60)) next            #Skip if shift appears in first 6 yers
+        #if(any(m+24 <k)) next
+        t_cut <- t[1:(k-mod(k,12))]
+        t_cut_season <- rowMeans(matrix(t_cut,nrow=12))
+        t_cut_season_rep <- rep(t_cut_season,length(t_cut)/12)
+        t_cut_deseasonal <- t_cut - t_cut_season_rep
+        ts <- normalise(t_cut_deseasonal)
+        predictions_ice[i,j,,count] <- predict(model, t(ts))
+        saveRDS(predictions_ice,'/Users/joshbuxton/Library/CloudStorage/OneDrive-UniversityofExeter/DARPA Postdoc/BAE Collaboration/average_probs.rds')
+      }
+    }
+  }
+}
+
+#Now average each model to get 1 probability for each outcome
+
+average_prob_ice <- array(NA, dim=c(dim(predictions_ice)[1],dim(predictions_ice)[2],4))
+for (i in 1:dim(predictions_ice)[1]) {
+  for (j in 1:dim(predictions_ice)[2]) {
+    for (k in 1:4) {
+      average_prob_ice[i,j,k] <- mean(predictions_ice[i,j,k,])
+    }
+  }
+}
+
+#The probabiliy of a given pixel i,j undergoing the following bifurcation is therefore:
+
+fold <- average_prob_ice[i,j,1]
+hopf <- average_prob_ice[i,j,2]
+trans <- average_prob_ice[i,j,3]
+no_bifur <- average_prob_ice[i,j,4]
+total_bifur <- 1-no_bifur
 
